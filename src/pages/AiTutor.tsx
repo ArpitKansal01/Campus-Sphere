@@ -3,8 +3,11 @@ import AiTutor from "@/components/ai/AiTutor";
 import { Bot, Bookmark, Brain, FileQuestion, GraduationCap, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import React, { useState } from "react";
 
 const AiTutorPage = () => {
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+  
   const suggestedQuestions = [
     {
       category: "Academic Help",
@@ -38,6 +41,10 @@ const AiTutorPage = () => {
     }
   ];
 
+  const handleQuestionClick = (question: string) => {
+    setSelectedQuestion(question);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row gap-8">
@@ -53,7 +60,7 @@ const AiTutorPage = () => {
             </p>
           </div>
           
-          <AiTutor />
+          <AiTutor selectedQuestion={selectedQuestion} onQuestionUsed={() => setSelectedQuestion(null)} />
         </div>
         
         {/* Sidebar */}
@@ -85,6 +92,7 @@ const AiTutorPage = () => {
                           variant="outline"
                           className="w-full justify-start text-sm h-auto py-2 text-left"
                           size="sm"
+                          onClick={() => handleQuestionClick(question)}
                         >
                           <FileQuestion className="h-3.5 w-3.5 mr-2 flex-none" />
                           <span className="line-clamp-2">{question}</span>

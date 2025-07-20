@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, Bot, User, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,12 @@ type MessageType = {
 
 type TutorCategory = "studies" | "career" | "resources";
 
-const AiTutor = () => {
+type AiTutorProps = {
+  selectedQuestion?: string | null;
+  onQuestionUsed?: () => void;
+};
+
+const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TutorCategory>("studies");
@@ -29,6 +34,14 @@ const AiTutor = () => {
       timestamp: new Date(),
     },
   ]);
+
+  // Effect to handle selected questions from the sidebar
+  useEffect(() => {
+    if (selectedQuestion) {
+      setMessage(selectedQuestion);
+      onQuestionUsed?.();
+    }
+  }, [selectedQuestion, onQuestionUsed]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as TutorCategory);
@@ -49,7 +62,7 @@ const AiTutor = () => {
     setMessages((prev) => [...prev, newBotMessage]);
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
     
     // User message
@@ -64,28 +77,69 @@ const AiTutor = () => {
     setMessage("");
     setIsLoading(true);
     
-    // Simulate AI response
-    setTimeout(() => {
-      let responseContent = "";
+    try {
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
       
-      if (activeTab === "studies") {
-        responseContent = "That's a great question about your studies! In a real implementation, I would connect to an AI service like OpenAI to provide a detailed answer about the academic topic you're asking about.";
-      } else if (activeTab === "career") {
-        responseContent = "Thanks for your career question! In a real implementation, I would provide personalized career advice, resume feedback, or interview tips based on your specific situation.";
-      } else {
-        responseContent = "I'd be happy to help you find resources! In a real implementation, I would connect you with relevant campus resources, study materials, or support services based on your needs.";
+      // Check if token exists
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
       }
       
+      // Make API call to get response
+      const response = await fetch('http://localhost:5000/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          category: activeTab,
+          history: messages.map(msg => ({
+            role: msg.isBot ? 'assistant' : 'user',
+            content: msg.content
+          }))
+        })
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        } else {
+          throw new Error(`API error: ${response.status}`);
+        }
+      }
+      
+      const data = await response.json();
+      
       const botResponse: MessageType = {
-        id: (Date.now() + 1).toString(),
-        content: responseContent,
+        id: Date.now().toString(),
+        content: data.response || "I'm sorry, I couldn't process your request at this time.",
         isBot: true,
         timestamp: new Date(),
       };
       
       setMessages((prev) => [...prev, botResponse]);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      
+      // More specific error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "An unknown error occurred";
+      
+      const errorResponse: MessageType = {
+        id: Date.now().toString(),
+        content: `I'm sorry, I encountered an error: ${errorMessage}`,
+        isBot: true,
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (

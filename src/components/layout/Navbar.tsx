@@ -1,105 +1,244 @@
 
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, UserCircle, Users, Briefcase, MessageSquare, Bot } from 'lucide-react';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { ModeToggle } from "@/components/theme/mode-toggle";
+import { cn } from "@/lib/utils";
+import { Calendar, Users, Briefcase, MessageSquare, Bot, Menu, X } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const location = useLocation();
-  
-  const navItems = [
-    { name: 'Events', path: '/events', icon: <Calendar className="h-5 w-5" /> },
-    { name: 'Groups', path: '/groups', icon: <Users className="h-5 w-5" /> },
-    { name: 'Jobs', path: '/jobs', icon: <Briefcase className="h-5 w-5" /> },
-    { name: 'Chat', path: '/chat', icon: <MessageSquare className="h-5 w-5" /> },
-    { name: 'AI Tutor', path: '/ai-tutor', icon: <Bot className="h-5 w-5" /> },
-  ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const handleSignOut = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    setUserEmail(null);
+    setUserName(null);
+  };
+
+  useEffect(() => {
+    // Check if user is logged in
+    const email = localStorage.getItem('userEmail');
+    const storedUserName = localStorage.getItem('userName');
+    
+    if (email) {
+      setUserEmail(email);
+    }
+    
+    if (storedUserName) {
+      setUserName(storedUserName);
+    }
+
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Get user initials for avatar
+  const getInitials = () => {
+    if (userName) {
+      const names = userName.split(' ');
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[1][0]}`.toUpperCase();
+      } else if (names.length === 1 && names[0].length > 0) {
+        return names[0][0].toUpperCase();
+      }
+    }
+    return userEmail ? userEmail[0].toUpperCase() : 'U';
+  };
 
   return (
-    <nav className="bg-background sticky top-0 z-10 border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="font-bold text-xl campus-gradient-text">CampusSphere</span>
-            </Link>
-          </div>
-          
-          {/* Desktop navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-foreground/80 hover:bg-accent/20'
-                }`}
-              >
-                <span className="mr-2">{item.icon}</span>
-                {item.name}
-              </Link>
-            ))}
-            <Button variant="outline" size="sm" className="ml-4">
-              <UserCircle className="mr-2 h-4 w-4" />
-              Sign In
-            </Button>
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-primary hover:text-primary-foreground hover:bg-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
-          </div>
+    <header
+      className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-200",
+        isScrolled
+          ? "bg-background/80 backdrop-blur-md border-b"
+          : "bg-background"
+      )}
+    >
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6 md:gap-8 lg:gap-10">
+          <Link to="/" className="font-bold text-xl">
+          <span className="campus-gradient-text">CampusSphere</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/events">
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    active={location.pathname === "/events"}
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Events
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/groups">
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    active={location.pathname === "/groups"}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Groups
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/jobs">
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    active={location.pathname === "/jobs"}
+                  >
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    Jobs
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/chat">
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    active={location.pathname === "/chat"}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Chat
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/ai-tutor">
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    active={location.pathname === "/ai-tutor"}
+                  >
+                    <Bot className="w-4 h-4 mr-2" />
+                    AI Tutor
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
-      </div>
-      
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
-                  isActive(item.path)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-foreground/80 hover:bg-accent/20'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="mr-3">{item.icon}</span>
-                {item.name}
-              </Link>
-            ))}
-            <div className="pt-4 pb-3 border-t border-border">
-              <Button variant="outline" size="sm" className="w-full">
-                <UserCircle className="mr-2 h-4 w-4" />
-                Sign In
+
+        <div className="flex items-center gap-4">
+          <ModeToggle />
+          
+          {userEmail ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="" alt={userName || userEmail} />
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userName || 'User'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {userEmail}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link to="/profile" className="w-full">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/settings" className="w-full">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" asChild>
+                <Link to="/signin">Sign In</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/signup">Sign Up</Link>
               </Button>
             </div>
-          </div>
+          )}
+
+          {/* Mobile Navigation */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <nav className="flex flex-col gap-4">
+                <Link to="/" className="font-bold text-xl mb-4">
+                  CampusSphere
+                </Link>
+                <Link to="/events" className="flex items-center py-2">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Events
+                </Link>
+                <Link to="/groups" className="flex items-center py-2">
+                  <Users className="w-4 h-4 mr-2" />
+                  Groups
+                </Link>
+                <Link to="/jobs" className="flex items-center py-2">
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  Jobs
+                </Link>
+                <Link to="/chat" className="flex items-center py-2">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Chat
+                </Link>
+                <Link to="/ai-tutor" className="flex items-center py-2">
+                  <Bot className="w-4 h-4 mr-2" />
+                  AI Tutor
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
-      )}
-    </nav>
+      </div>
+    </header>
   );
 };
 
