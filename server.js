@@ -189,73 +189,78 @@ app.post("/api/auth/signin", async (req, res) => {
 });
 
 // AI Tutor endpoint with Gemini API
+// AI Tutor endpoint with Gemini API
 app.post("/api/ai/chat", auth, async (req, res) => {
   try {
     const { message, category, history } = req.body;
 
-    // Log the request for debugging
     console.log("AI Chat Request:", {
       message,
       category,
-      historyLength: history?.length,
+      historyLength: history?.length || 0,
     });
 
-    // Validate API key
+    // Check API key
     if (!process.env.GEMINI_API_KEY) {
       console.error("Missing Gemini API key");
-      throw new Error("API configuration error");
+      return res.status(500).json({ response: "Server configuration error." });
     }
 
-    // Create a system prompt based on the category
+    // Build a system prompt depending on the category
     let systemPrompt =
-      "You are a helpful AI campus tutor. Provide concise responses under 100 words. ";
+      "You are a helpful AI Campus Tutor. Keep your answers concise, friendly, and under 100 words. ";
 
-    if (category === "studies") {
-      ``;
-      systemPrompt +=
-        "You specialize in academic assistance, explaining concepts, and study strategies.";
-    } else if (category === "career") {
-      systemPrompt +=
-        "You specialize in career guidance, resume building, and interview preparation.";
-    } else if (category === "resources") {
-      systemPrompt +=
-        "You specialize in campus resources, including academic support, mental health services, and financial aid.";
+    switch (category) {
+      case "studies":
+        systemPrompt +=
+          "Focus on explaining academic topics clearly with short examples.";
+        break;
+      case "career":
+        systemPrompt +=
+          "Provide actionable career guidance, resume feedback, and interview preparation tips.";
+        break;
+      case "resources":
+        systemPrompt +=
+          "Guide students to relevant academic resources, mental health services, or campus help centers.";
+        break;
+      default:
+        systemPrompt += "Assist the user helpfully based on the given question.";
     }
 
-    // Initialize the Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // ✅ Use the latest, valid Gemini model
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash-latest",
+    });
 
-    // Add the length constraint to the prompt
-    let fullPrompt = `${systemPrompt}\n\nIMPORTANT: Keep your response under 100 words.\n\n`;
-
-    // Add simplified conversation context if available
-    if (history && history.length > 0) {
-      fullPrompt += "Previous conversation:\n";
+    // Build conversation context
+    let fullPrompt = `${systemPrompt}\n\n`;
+    if (history?.length) {
+      fullPrompt += "Recent conversation:\n";
       for (const msg of history.slice(-3)) {
-        // Reduced from 5 to 3 messages
         const role = msg.role === "assistant" ? "AI Tutor" : "Student";
         fullPrompt += `${role}: ${msg.content}\n`;
       }
       fullPrompt += "\n";
     }
 
-    // Add the current query
     fullPrompt += `Student's current question: ${message}\n\n`;
     fullPrompt += "AI Tutor's response (under 100 words):";
 
-    // Generate content with a single prompt
+    // Generate response
     const result = await model.generateContent(fullPrompt);
-    const response = result.response.text();
+    const text = result.response.text();
 
-    res.json({ response });
+    return res.json({ response: text });
   } catch (error) {
     console.error("AI chat error:", error);
-    res.json({
+    return res.status(500).json({
       response:
-        "I'm having trouble connecting right now. Please try again in a moment.",
+        "I'm having trouble connecting to the AI service right now. Please try again later.",
+      error: error.message,
     });
   }
 });
+
 
 // Event routes
 app.post("/api/events", auth, async (req, res) => {
