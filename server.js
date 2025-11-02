@@ -4,7 +4,7 @@ import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, Models } from "@google/genai";
 
 // Load environment variables
 dotenv.config();
@@ -16,8 +16,9 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
 // MongoDB Connection
 mongoose.connect(
   "mongodb+srv://kansalarpit06_db_user:Guh4yYTcMOrIRVaj@cluster0.92otl78.mongodb.net/Campus_Sphere?retryWrites=true&w=majority&appName=Cluster0",
@@ -224,14 +225,12 @@ app.post("/api/ai/chat", auth, async (req, res) => {
           "Guide students to relevant academic resources, mental health services, or campus help centers.";
         break;
       default:
-        systemPrompt += "Assist the user helpfully based on the given question.";
+        systemPrompt +=
+          "Assist the user helpfully based on the given question.";
     }
 
     // ✅ Use the latest, valid Gemini model
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-    });
-
+    // Initialize the Gemini model
     // Build conversation context
     let fullPrompt = `${systemPrompt}\n\n`;
     if (history?.length) {
@@ -247,8 +246,11 @@ app.post("/api/ai/chat", auth, async (req, res) => {
     fullPrompt += "AI Tutor's response (under 100 words):";
 
     // Generate response
-    const result = await model.generateContent(fullPrompt);
-    const text = result.response.text();
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: fullPrompt,
+    });
+    const text = result.text;
 
     return res.json({ response: text });
   } catch (error) {
@@ -260,7 +262,6 @@ app.post("/api/ai/chat", auth, async (req, res) => {
     });
   }
 });
-
 
 // Event routes
 app.post("/api/events", auth, async (req, res) => {
