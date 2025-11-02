@@ -30,7 +30,9 @@ const SignUp = () => {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(
+      password
+    );
 
     if (password.length < minLength) {
       return `Password must be at least ${minLength} characters long`;
@@ -76,23 +78,26 @@ const SignUp = () => {
 
     try {
       // Update the fetch URL
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const response = await fetch(
+        "https://campus-sphere-ev33.onrender.com/api/auth/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to create account');
+        throw new Error(data.message || "Failed to create account");
       }
 
       toast({
@@ -104,7 +109,8 @@ const SignUp = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create account",
+        description:
+          error instanceof Error ? error.message : "Failed to create account",
       });
     }
   };
@@ -115,7 +121,7 @@ const SignUp = () => {
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear password error when user types in password field
     if (name === "password") {
       setPasswordError("");
@@ -183,8 +189,8 @@ const SignUp = () => {
                 <p className="text-sm text-red-500">{passwordError}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Password must be at least 6 characters and include uppercase, lowercase, 
-                number, and special character.
+                Password must be at least 6 characters and include uppercase,
+                lowercase, number, and special character.
               </p>
             </div>
             <div className="space-y-2">

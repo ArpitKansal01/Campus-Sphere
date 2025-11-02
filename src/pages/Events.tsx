@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import EventCard from "@/components/events/EventCard";
@@ -14,32 +13,37 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/events');
+        const response = await fetch(
+          "https://campus-sphere-ev33.onrender.com/api/events"
+        );
         if (!response.ok) {
-          throw new Error('Failed to fetch events');
+          throw new Error("Failed to fetch events");
         }
-        
+
         const data = await response.json();
-        
+
         // Transform the data to match EventCard component expectations
-        const formattedEvents = data.map(event => ({
+        const formattedEvents = data.map((event) => ({
           id: event._id,
           title: event.title,
           description: event.description,
           date: new Date(event.startDate).toLocaleDateString(),
-          time: new Date(event.startDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          time: new Date(event.startDate).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           location: event.location,
           attendees: event.attendees?.length || 0,
-          image: event.image
+          image: event.image,
         }));
-        
+
         setEvents(formattedEvents);
       } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error("Error fetching events:", error);
         toast({
           title: "Error",
           description: "Failed to load events. Please try again later.",
-          variant: "destructive"
+          variant: "destructive",
         });
       } finally {
         setLoading(false);
@@ -55,7 +59,7 @@ const Events = () => {
         <h1 className="text-3xl font-bold">Campus Events</h1>
         <EventForm />
       </div>
-      
+
       {loading ? (
         <div className="text-center py-12">Loading events...</div>
       ) : events.length === 0 ? (
@@ -65,7 +69,7 @@ const Events = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map(event => (
+          {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </div>

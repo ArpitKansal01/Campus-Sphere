@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,7 +21,7 @@ const EventForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -29,60 +29,63 @@ const EventForm = () => {
     startDate: "",
     endDate: "",
     category: "social",
-    image: "https://via.placeholder.com/400x200?text=Event+Image"
+    image: "https://via.placeholder.com/400x200?text=Event+Image",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // Get token from localStorage
-      const token = localStorage.getItem('token');
-      
+      const token = localStorage.getItem("token");
+
       if (!token) {
         toast({
           title: "Authentication Error",
           description: "Please sign in to create an event",
-          variant: "destructive"
+          variant: "destructive",
         });
-        navigate('/signin');
+        navigate("/signin");
         return;
       }
-      
+
       // For debugging - log the token format
       console.log("Using token:", token.substring(0, 10) + "...");
-      
-      const response = await fetch('http://localhost:5000/api/events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      
+
+      const response = await fetch(
+        "https://campus-sphere-ev33.onrender.com/api/events",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Server response:", response.status, errorData);
-        throw new Error(errorData.message || 'Failed to create event');
+        throw new Error(errorData.message || "Failed to create event");
       }
-      
+
       const data = await response.json();
-      
+
       toast({
         title: "Success!",
         description: "Your event has been created",
       });
-      
+
       setOpen(false);
       // Refresh the events list
       window.location.reload();
@@ -90,8 +93,9 @@ const EventForm = () => {
       console.error("Error creating event:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create event. Please try again.",
-        variant: "destructive"
+        description:
+          error.message || "Failed to create event. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -123,7 +127,7 @@ const EventForm = () => {
                 required
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -135,7 +139,7 @@ const EventForm = () => {
                 required
               />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="startDate">Start Date</Label>
@@ -151,7 +155,7 @@ const EventForm = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="endDate">End Date</Label>
                 <div className="flex">
@@ -167,7 +171,7 @@ const EventForm = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="location">Location</Label>
               <div className="flex">
@@ -182,7 +186,7 @@ const EventForm = () => {
                 />
               </div>
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="image">Image URL</Label>
               <div className="flex">
@@ -198,7 +202,11 @@ const EventForm = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

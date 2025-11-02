@@ -1,61 +1,70 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-  
+      const response = await fetch(
+        "https://campus-sphere-ev33.onrender.com/api/auth/signin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to sign in');
+        throw new Error(data.message || "Failed to sign in");
       }
-  
+
       // Store both token and email
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userEmail', formData.email);
-      
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userEmail", formData.email);
+
       toast({
         title: "Success",
         description: "Signed in successfully!",
       });
-  
-      navigate('/');
+
+      navigate("/");
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to sign in",
+        description:
+          error instanceof Error ? error.message : "Failed to sign in",
       });
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -89,7 +98,10 @@ const SignIn = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium mb-1"
+              >
                 Password
               </label>
               <Input
@@ -118,7 +130,10 @@ const SignIn = () => {
               </div>
 
               <div className="text-sm">
-                <Link to="/forgot-password" className="text-primary hover:text-primary/80">
+                <Link
+                  to="/forgot-password"
+                  className="text-primary hover:text-primary/80"
+                >
                   Forgot your password?
                 </Link>
               </div>
@@ -131,7 +146,7 @@ const SignIn = () => {
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <Link to="/signup" className="text-primary hover:text-primary/80">
               Sign up
             </Link>

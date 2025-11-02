@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Send, Bot, User, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,11 +24,12 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TutorCategory>("studies");
-  
+
   const [messages, setMessages] = useState<MessageType[]>([
     {
       id: "1",
-      content: "Hello! I'm your AI Campus Tutor. How can I help you today? I can answer questions about your studies, provide career advice, or point you to useful resources.",
+      content:
+        "Hello! I'm your AI Campus Tutor. How can I help you today? I can answer questions about your studies, provide career advice, or point you to useful resources.",
       isBot: true,
       timestamp: new Date(),
     },
@@ -45,12 +45,12 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as TutorCategory);
-    
+
     // Add a message based on the selected tab
     const newBotMessage: MessageType = {
       id: Date.now().toString(),
-      content: 
-        value === "studies" 
+      content:
+        value === "studies"
           ? "I can help with your coursework, explain difficult concepts, or help you prepare for exams. What subject are you working on?"
           : value === "career"
           ? "I can help with resume reviews, interview preparation, or career path guidance. What career questions do you have?"
@@ -58,13 +58,13 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
       isBot: true,
       timestamp: new Date(),
     };
-    
+
     setMessages((prev) => [...prev, newBotMessage]);
   };
 
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
-    
+
     // User message
     const userMessage: MessageType = {
       id: Date.now().toString(),
@@ -72,70 +72,74 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
       isBot: false,
       timestamp: new Date(),
     };
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setMessage("");
     setIsLoading(true);
-    
+
     try {
       // Get the token from localStorage
-      const token = localStorage.getItem('token');
-      
+      const token = localStorage.getItem("token");
+
       // Check if token exists
       if (!token) {
-        throw new Error('Authentication token not found. Please log in again.');
+        throw new Error("Authentication token not found. Please log in again.");
       }
-      
+
       // Make API call to get response
-      const response = await fetch('http://localhost:5000/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          message: userMessage.content,
-          category: activeTab,
-          history: messages.map(msg => ({
-            role: msg.isBot ? 'assistant' : 'user',
-            content: msg.content
-          }))
-        })
-      });
-      
+      const response = await fetch(
+        "https://campus-sphere-ev33.onrender.com/api/ai/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            message: userMessage.content,
+            category: activeTab,
+            history: messages.map((msg) => ({
+              role: msg.isBot ? "assistant" : "user",
+              content: msg.content,
+            })),
+          }),
+        }
+      );
+
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Authentication failed. Please log in again.');
+          throw new Error("Authentication failed. Please log in again.");
         } else {
           throw new Error(`API error: ${response.status}`);
         }
       }
-      
+
       const data = await response.json();
-      
+
       const botResponse: MessageType = {
         id: Date.now().toString(),
-        content: data.response || "I'm sorry, I couldn't process your request at this time.",
+        content:
+          data.response ||
+          "I'm sorry, I couldn't process your request at this time.",
         isBot: true,
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
       console.error("Error getting AI response:", error);
-      
+
       // More specific error message
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "An unknown error occurred";
-      
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+
       const errorResponse: MessageType = {
         id: Date.now().toString(),
         content: `I'm sorry, I encountered an error: ${errorMessage}`,
         isBot: true,
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
@@ -149,15 +153,23 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
         <div className="flex items-center mb-4">
           <Avatar className="h-10 w-10 bg-primary/10">
             <AvatarImage src="https://via.placeholder.com/150" alt="AI Tutor" />
-            <AvatarFallback><Bot className="text-primary" /></AvatarFallback>
+            <AvatarFallback>
+              <Bot className="text-primary" />
+            </AvatarFallback>
           </Avatar>
           <div className="ml-3">
             <p className="font-medium">Campus AI Tutor</p>
-            <p className="text-xs text-muted-foreground">Your 24/7 academic and career assistant</p>
+            <p className="text-xs text-muted-foreground">
+              Your 24/7 academic and career assistant
+            </p>
           </div>
         </div>
-        
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="studies">Studies</TabsTrigger>
             <TabsTrigger value="career">Career</TabsTrigger>
@@ -165,7 +177,7 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
           </TabsList>
         </Tabs>
       </div>
-      
+
       {/* Chat messages */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
@@ -205,7 +217,7 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
               )}
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex justify-start">
               <Avatar className="h-8 w-8 mr-2">
@@ -221,7 +233,7 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
           )}
         </div>
       </ScrollArea>
-      
+
       {/* Chat input */}
       <div className="p-4 border-t bg-background">
         <form
@@ -235,17 +247,17 @@ const AiTutor = ({ selectedQuestion, onQuestionUsed }: AiTutorProps = {}) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={`Ask about ${
-              activeTab === "studies" 
-                ? "homework, concepts, or exam prep..." 
-                : activeTab === "career" 
-                ? "resumes, interviews, or career paths..." 
+              activeTab === "studies"
+                ? "homework, concepts, or exam prep..."
+                : activeTab === "career"
+                ? "resumes, interviews, or career paths..."
                 : "campus resources, support services..."
             }`}
             className="flex-1"
             disabled={isLoading}
           />
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             size="icon"
             disabled={isLoading || !message.trim()}
           >
